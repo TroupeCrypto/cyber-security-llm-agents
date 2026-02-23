@@ -105,7 +105,40 @@ We ignore W503 (line break before binary operator) and we are opinionated about 
 flake8 --exclude=.venv --ignore=E501,W503 .
 ```
 
-## Conributions
+## Deploy to Vercel
+
+You can deploy this project to [Vercel](https://vercel.com/) to get a web-based interface and API for the LLM agents.
+
+### Quick Deploy
+
+1. Fork this repository on GitHub.
+2. Go to [vercel.com/new](https://vercel.com/new) and import your forked repository.
+3. Set the required environment variables in the Vercel project settings:
+   - `OPENAI_API_KEY` — Your OpenAI API key (**required**)
+   - `OPENAI_MODEL_NAME` — Model to use (optional, defaults to `gpt-3.5-turbo-0125`)
+   - `CALDERA_SERVER` — Caldera C2 server URL (optional)
+   - `CALDERA_API_KEY` — Caldera API key (optional)
+4. Deploy! Vercel will automatically build and deploy the project.
+
+### API Endpoints
+
+Once deployed, the following endpoints are available:
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api` | GET | Project information and health check |
+| `/api/scenarios` | GET | List all available scenarios with their steps |
+| `/api/run` | POST | Run a scenario. Body: `{"scenario": "SCENARIO_NAME"}` |
+
+### Example: Run a Scenario
+
+```bash
+curl -X POST https://your-deployment.vercel.app/api/run \
+  -H "Content-Type: application/json" \
+  -d '{"scenario": "HELLO_AGENTS"}'
+```
+
+## Contributions
 
 We welcome contributions from the community! 
 

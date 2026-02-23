@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Security LLM Agents</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #79c0ff;
+            --green: #3fb950;
+            --red: #f85149;
+            --yellow: #d29922;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+        header { text-align: center; margin-bottom: 2.5rem; }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        h1 span { color: var(--accent); }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h2 { font-size: 1.25rem; margin-bottom: 1rem; color: var(--accent); }
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+        .badge-get { background: rgba(63,185,80,0.15); color: var(--green); }
+        .badge-post { background: rgba(210,153,34,0.15); color: var(--yellow); }
+        .endpoint {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .endpoint:last-child { border-bottom: none; }
+        .endpoint code {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            background: rgba(110,118,129,0.15);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .endpoint-desc { color: var(--text-muted); font-size: 0.9rem; }
+        .scenarios-grid { display: grid; gap: 0.75rem; }
+        .scenario {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: rgba(110,118,129,0.08);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .scenario:hover { border-color: var(--accent); }
+        .scenario-name {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .scenario-steps {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        .step-detail {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        .step-detail.open { display: block; }
+        .step-item {
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .step-item:last-child { border-bottom: none; }
+        .step-agent { color: var(--green); font-weight: 600; font-size: 0.8rem; }
+        .step-msg { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem; }
+        .env-table { width: 100%; border-collapse: collapse; }
+        .env-table th, .env-table td {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        .env-table th { color: var(--text-muted); font-weight: 600; }
+        .env-table code {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            background: rgba(110,118,129,0.15);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+        }
+        .required { color: var(--red); }
+        .optional { color: var(--text-muted); }
+        .instructions ol {
+            padding-left: 1.5rem;
+            color: var(--text-muted);
+        }
+        .instructions li { margin-bottom: 0.75rem; }
+        .instructions code {
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            background: rgba(110,118,129,0.15);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+        footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .status { display: inline-block; margin-left: 0.5rem; }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        .status-dot.ok { background: var(--green); }
+        .status-dot.err { background: var(--red); }
+        .status-dot.loading { background: var(--yellow); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        #api-status { font-size: 0.85rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Cyber Security <span>LLM Agents</span></h1>
+            <p class="subtitle">
+                A collection of agents that use Large Language Models to perform
+                tasks common in cyber security. Built on
+                <a href="https://microsoft.github.io/autogen/" style="color: var(--accent); text-decoration: none;">AutoGen</a>.
+            </p>
+            <p id="api-status" style="margin-top: 0.5rem;">
+                <span class="status-dot loading"></span> Checking API status…
+            </p>
+        </header>
+
+        <div class="card">
+            <h2>📡 API Endpoints</h2>
+            <div class="endpoint">
+                <div>
+                    <code>/api</code>
+                    <span class="badge badge-get">GET</span>
+                </div>
+                <span class="endpoint-desc">Project information &amp; health check</span>
+            </div>
+            <div class="endpoint">
+                <div>
+                    <code>/api/scenarios</code>
+                    <span class="badge badge-get">GET</span>
+                </div>
+                <span class="endpoint-desc">List available scenarios with steps</span>
+            </div>
+            <div class="endpoint">
+                <div>
+                    <code>/api/run</code>
+                    <span class="badge badge-post">POST</span>
+                </div>
+                <span class="endpoint-desc">Run a scenario <code>{"scenario": "NAME"}</code></span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🎯 Available Scenarios</h2>
+            <div id="scenarios-container" class="scenarios-grid">
+                <p style="color: var(--text-muted);">Loading scenarios…</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🚀 Deploy Your Own</h2>
+            <div class="instructions">
+                <ol>
+                    <li>Fork the <a href="https://github.com/TroupeCrypto/cyber-security-llm-agents" style="color: var(--accent); text-decoration: none;">repository</a> on GitHub.</li>
+                    <li>Go to <a href="https://vercel.com/new" style="color: var(--accent); text-decoration: none;">vercel.com/new</a> and import your forked repository.</li>
+                    <li>Set the required environment variables in the Vercel project settings (see below).</li>
+                    <li>Deploy! Vercel will automatically build and deploy the project.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ Environment Variables</h2>
+            <table class="env-table">
+                <thead>
+                    <tr><th>Variable</th><th>Description</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>OPENAI_API_KEY</code></td>
+                        <td>Your OpenAI API key</td>
+                        <td><span class="required">Required</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>OPENAI_MODEL_NAME</code></td>
+                        <td>Model to use (default: <code>gpt-3.5-turbo-0125</code>)</td>
+                        <td><span class="optional">Optional</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>CALDERA_SERVER</code></td>
+                        <td>Caldera C2 server URL</td>
+                        <td><span class="optional">Optional</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>CALDERA_API_KEY</code></td>
+                        <td>Caldera API key</td>
+                        <td><span class="optional">Optional</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <footer>
+            <p>
+                Released under GPL-3 •
+                <a href="https://github.com/TroupeCrypto/cyber-security-llm-agents">GitHub</a> •
+                Part of RSAC 2024 talks
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Check API status
+        fetch('/api')
+            .then(function(r) { return r.json(); })
+            .then(function() {
+                document.getElementById('api-status').innerHTML =
+                    '<span class="status-dot ok"></span> API is running';
+            })
+            .catch(function() {
+                document.getElementById('api-status').innerHTML =
+                    '<span class="status-dot err"></span> API unavailable';
+            });
+
+        // Load scenarios
+        fetch('/api/scenarios')
+            .then(function(r) { return r.json(); })
+            .then(function(scenarios) {
+                var container = document.getElementById('scenarios-container');
+                if (!scenarios.length) {
+                    container.innerHTML = '<p style="color: var(--text-muted);">No scenarios found.</p>';
+                    return;
+                }
+                container.innerHTML = '';
+                scenarios.forEach(function(s) {
+                    var wrapper = document.createElement('div');
+
+                    var row = document.createElement('div');
+                    row.className = 'scenario';
+                    row.innerHTML =
+                        '<span class="scenario-name">' + s.name + '</span>' +
+                        '<span class="scenario-steps">' + s.steps.length + ' step' + (s.steps.length !== 1 ? 's' : '') + ' ▸</span>';
+
+                    var detail = document.createElement('div');
+                    detail.className = 'step-detail';
+                    s.steps.forEach(function(step) {
+                        var item = document.createElement('div');
+                        item.className = 'step-item';
+                        item.innerHTML =
+                            '<div class="step-agent">🤖 ' + step.agent + '</div>' +
+                            '<div class="step-msg">' + step.message.substring(0, 200) + (step.message.length > 200 ? '…' : '') + '</div>';
+                        detail.appendChild(item);
+                    });
+
+                    row.addEventListener('click', function() {
+                        detail.classList.toggle('open');
+                    });
+
+                    wrapper.appendChild(row);
+                    wrapper.appendChild(detail);
+                    container.appendChild(wrapper);
+                });
+            })
+            .catch(function() {
+                document.getElementById('scenarios-container').innerHTML =
+                    '<p style="color: var(--text-muted);">Could not load scenarios.</p>';
+            });
+    </script>
+</body>
+</html>
