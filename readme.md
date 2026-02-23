@@ -138,7 +138,7 @@ curl -X POST https://your-deployment.vercel.app/api/run \
   -d '{"scenario": "HELLO_AGENTS"}'
 ```
 
-## Conributions
+## Contributions
 
 We welcome contributions from the community! 
 
